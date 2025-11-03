@@ -70,7 +70,7 @@ export function ForgotPasswordModal({ isOpen, onClose, initialEmail = "", onRetu
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px] transition-all duration-300 ease-in-out animate-in fade-in-0 zoom-in-95" data-testid="modal-forgot-password">
         <DialogHeader>
-          <DialogTitle className="[font-family:'Poppins',Helvetica] text-2xl font-bold text-[#3F2C77]">
+          <DialogTitle className="[font-family:'Poppins',Helvetica] text-2xl font-bold text-[#59A5B2]">
             Reset Your Password
           </DialogTitle>
           <DialogDescription className="[font-family:'Inter',Helvetica] text-gray-600">
@@ -94,7 +94,7 @@ export function ForgotPasswordModal({ isOpen, onClose, initialEmail = "", onRetu
                 handleClose()
                 onReturnToLogin()
               }}
-              className="w-full h-12 bg-[#3F2C77] hover:bg-[#2a2158] text-white transition-colors duration-200"
+              className="w-full h-12 bg-[#59A5B2] hover:bg-[#2a2158] text-white transition-colors duration-200"
               data-testid="button-return-login"
             >
               Return to Login
@@ -116,7 +116,7 @@ export function ForgotPasswordModal({ isOpen, onClose, initialEmail = "", onRetu
                   setEmail(e.target.value)
                   setError("")
                 }}
-                className="h-12 border-gray-300 focus:border-[#3F2C77] focus:ring-[#3F2C77]"
+                className="h-12 border-gray-300 focus:border-[#59A5B2] focus:ring-[#59A5B2]"
                 autoFocus
                 data-testid="input-reset-email"
               />
@@ -130,7 +130,7 @@ export function ForgotPasswordModal({ isOpen, onClose, initialEmail = "", onRetu
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-12 bg-[#3F2C77] hover:bg-[#2a2158] text-white transition-colors duration-200"
+              className="w-full h-12 bg-[#59A5B2] hover:bg-[#2a2158] text-white transition-colors duration-200"
               data-testid="button-send-reset"
             >
               {isSubmitting ? "Sending..." : "Send Reset Code"}
@@ -142,7 +142,7 @@ export function ForgotPasswordModal({ isOpen, onClose, initialEmail = "", onRetu
                 handleClose()
                 onReturnToLogin()
               }}
-              className="w-full text-sm text-gray-600 hover:text-[#3F2C77] [font-family:'Inter',Helvetica]"
+              className="w-full text-sm text-gray-600 hover:text-[#59A5B2] [font-family:'Inter',Helvetica]"
               data-testid="link-back-to-login"
             >
               Back to Login

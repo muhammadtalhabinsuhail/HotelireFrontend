@@ -54,7 +54,7 @@ export function Navigation() {
           className="w-full sm:w-[160px] lg:w-[181px] h-[45px] lg:h-[55px] bg-[#f5f6fd] rounded-[5px] border border-solid border-[#d9d9d9] [font-family:'Poppins',Helvetica] font-semibold text-[#59A5B2] text-xs lg:text-sm transition-all duration-200 hover:shadow-lg"
           asChild
         >
-          <a href="/customer/signin" rel="noopener noreferrer">
+          <a href="/auth/signin" rel="noopener noreferrer">
             LIST YOUR PROPERTY
           </a>
         </Button>

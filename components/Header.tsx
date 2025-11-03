@@ -123,7 +123,7 @@ export function Header() {
 
 
             <Link
-              href="./customer/signin"
+              href="/auth/signin"
               className="text-[#ffffff] [font-family:'Poppins',Helvetica] font-medium text-[#FFFFFF] text-[12px] leading-[30px] cursor-pointer w-full"
             >
               Login
