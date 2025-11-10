@@ -479,7 +479,7 @@ export default function SignupPage() {
       // Login successful, ab user data fetch karo /me se
       const userResponse = await axios.get(`${baseUrl}/auth/me`, { withCredentials: true });
    if(userResponse){
-      router.push("/customer/signup/thank-you")
+      router.push("/auth/signup/signup-success")
    }
   
 

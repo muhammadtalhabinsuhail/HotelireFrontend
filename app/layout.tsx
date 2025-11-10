@@ -18,8 +18,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Hotel Management System",
-  description: "Find Your Dream Luxury Hotel",
+  title: "Hotelire",
+  description: "Find Your Dream Luxury Hotel in Canada",
 };
 
 export default function RootLayout({
