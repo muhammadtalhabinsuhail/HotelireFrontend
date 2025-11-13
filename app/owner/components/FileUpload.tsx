@@ -20,6 +20,7 @@ interface FileUploadProps {
   onFileSelect: (fileData: FileData | null) => void
   error?: string
   uploadedFile?: FileData | null
+  disabled?: boolean
 }
 
 const BRAND = "#59A5B2"
@@ -33,6 +34,7 @@ export default function FileUpload({
   onFileSelect,
   error,
   uploadedFile,
+  disabled = false,
 }: FileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
@@ -140,10 +142,14 @@ export default function FileUpload({
         </div>
       ) : (
         <div
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          className="border-2 border-dashed border-gray-300 rounded-md p-8 text-center cursor-pointer hover:border-[#59A5B2] transition"
-          onClick={() => fileInputRef.current?.click()}
+          onDrop={disabled ? undefined : handleDrop}
+          onDragOver={disabled ? undefined : handleDragOver}
+          className={`border-2 border-dashed rounded-md p-8 text-center transition ${
+            disabled
+              ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-50"
+              : "border-gray-300 cursor-pointer hover:border-[#59A5B2]"
+          }`}
+          onClick={() => !disabled && fileInputRef.current?.click()}
         >
           <input
             ref={fileInputRef}
@@ -152,9 +158,14 @@ export default function FileUpload({
             onChange={handleFileChange}
             className="hidden"
             aria-label={label}
+            disabled={disabled}
           />
           <p className="text-sm text-gray-700 font-medium">
-            {uploading ? "Uploading..." : "Drag and drop or click to upload"}
+            {disabled
+              ? "Select document type above to upload"
+              : uploading
+                ? "Uploading..."
+                : "Drag and drop or click to upload"}
           </p>
           <p className="text-xs text-gray-500 mt-1">Max size: {maxSize}MB</p>
         </div>

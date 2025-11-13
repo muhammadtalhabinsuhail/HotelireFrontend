@@ -1,9 +1,12 @@
+
+
+
 "use client"
 
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,6 +28,8 @@ type OwnerBarrierErrors = Partial<{
   ownershipDoc: string
   agreeOwnership: string
   agreeTerms: string
+  idType: string
+  proofType: string
 }>
 
 const BRAND = "#59A5B2"
@@ -100,6 +105,8 @@ export default function OwnerBarrierForm() {
     agreeTerms: false,
     canadian_provinceid: "",
     canadian_cityid: "",
+    idType: "",
+    proofType: "",
   })
 
   const [uploadedFiles, setUploadedFiles] = useState<{
@@ -115,27 +122,61 @@ export default function OwnerBarrierForm() {
   const [canadianProvinces, setCanadianProvinces] = useState<CanadianProvince[]>([])
   const [canadianCities, setCanadianCities] = useState<CanadianCity[]>([])
 
+  // Mock Canadian provinces and cities data to avoid API dependency
+  const MOCK_PROVINCES: CanadianProvince[] = [
+    { canadian_province_id: 1, canadian_province_name: "Alberta" },
+    { canadian_province_id: 2, canadian_province_name: "British Columbia" },
+    { canadian_province_id: 3, canadian_province_name: "Manitoba" },
+    { canadian_province_id: 4, canadian_province_name: "New Brunswick" },
+    { canadian_province_id: 5, canadian_province_name: "Newfoundland and Labrador" },
+    { canadian_province_id: 6, canadian_province_name: "Nova Scotia" },
+    { canadian_province_id: 7, canadian_province_name: "Ontario" },
+    { canadian_province_id: 8, canadian_province_name: "Prince Edward Island" },
+    { canadian_province_id: 9, canadian_province_name: "Quebec" },
+    { canadian_province_id: 10, canadian_province_name: "Saskatchewan" },
+  ]
+
+  const MOCK_CITIES: Record<number, CanadianCity[]> = {
+    1: [
+      { canadian_city_id: 101, canadian_city_name: "Calgary", canadian_province_id: 1 },
+      { canadian_city_id: 102, canadian_city_name: "Edmonton", canadian_province_id: 1 },
+    ],
+    2: [
+      { canadian_city_id: 201, canadian_city_name: "Vancouver", canadian_province_id: 2 },
+      { canadian_city_id: 202, canadian_city_name: "Victoria", canadian_province_id: 2 },
+    ],
+    7: [
+      { canadian_city_id: 701, canadian_city_name: "Toronto", canadian_province_id: 7 },
+      { canadian_city_id: 702, canadian_city_name: "Ottawa", canadian_province_id: 7 },
+    ],
+    9: [
+      { canadian_city_id: 901, canadian_city_name: "Montreal", canadian_province_id: 9 },
+      { canadian_city_id: 902, canadian_city_name: "Quebec City", canadian_province_id: 9 },
+    ],
+  }
+
+  const ID_TYPE_OPTIONS = [
+    { value: "Driver's License", label: "Driver's License" },
+    { value: "Photo ID", label: "Photo ID" },
+    { value: "Health Card", label: "Health Card" },
+  ]
+
+  const PROOF_TYPE_OPTIONS = [
+    { value: "Gas Bill", label: "Gas Bill" },
+    { value: "Electricity Bill", label: "Electricity Bill" },
+    { value: "Internet Bill", label: "Internet Bill" },
+    { value: "Bank Statement", label: "Bank Statement" },
+  ]
+
   // Fetch provinces on mount
   useEffect(() => {
-    const fetchProvinces = async () => {
-      try {
-        const response = await fetch(`${baseUrl}/auth/getCanadianProvinces`)
-        const data = await response.json()
-        setCanadianProvinces(data.provinces || [])
-      } catch (error) {
-        console.error("Error fetching provinces:", error)
-      }
-    }
-    fetchProvinces()
+    setCanadianProvinces(MOCK_PROVINCES)
   }, [])
 
   // Fetch cities when province changes
   useEffect(() => {
     if (formData.canadian_provinceid) {
-      fetch(`${baseUrl}/auth/getCanadianCities/${formData.canadian_provinceid}`)
-        .then((res) => res.json())
-        .then((data) => setCanadianCities(data.cities || []))
-        .catch((err) => console.error("Error loading cities:", err))
+      setCanadianCities(MOCK_CITIES[formData.canadian_provinceid as unknown as number] || [])
     }
   }, [formData.canadian_provinceid])
 
@@ -281,6 +322,8 @@ export default function OwnerBarrierForm() {
         address: formData.address,
         postalCode: formData.postalCode,
         phone: `+1${formData.phone}`,
+        idType: formData.idType,
+        proofType: formData.proofType,
         photoId: uploadedFiles.photoId?.id,
         ownershipDoc: uploadedFiles.ownershipDoc?.id,
         agreeOwnership: formData.agreeOwnership,
@@ -308,16 +351,6 @@ export default function OwnerBarrierForm() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="space-y-4">
-        <h1 className="text-3xl font-bold text-center" style={{ color: BRAND }}>
-          Owner Verification
-        </h1>
-        <p className="text-center text-gray-600 text-sm">
-          Please verify your property ownership to proceed with listing. All information will be kept confidential.
-        </p>
-      </div>
-
       {/* Form */}
       <form noValidate className="space-y-6" onSubmit={handleSubmit}>
         {/* Legal Full Name */}
@@ -491,9 +524,32 @@ export default function OwnerBarrierForm() {
         <div className="space-y-6 pt-4 border-t border-gray-200">
           <h3 className="text-lg font-semibold text-gray-800">Upload Documents</h3>
 
+    
+
+           <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Government Issued ID Type <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                instanceId="id-type"
+                options={ID_TYPE_OPTIONS}
+                value={
+                  ID_TYPE_OPTIONS.find((opt) => opt.value === formData.idType) || null
+                }
+                onChange={(opt: any) => {
+                  setField("idType", opt ? opt.value : "")
+                }}
+                styles={selectStyles}
+                placeholder="Select ID type"
+              />
+              {errors.idType && <p className="text-xs text-red-500 mt-1">{errors.idType}</p>}
+            </div>
+
+
+
           <FileUpload
             label="Government Issued Photo ID"
-            description="Driver's License, Passport, or Health Card"
+            description={formData.idType}
             acceptedTypes={["image/jpeg", "image/png"]}
             maxSize={1}
             fileType="photoId"
@@ -505,13 +561,35 @@ export default function OwnerBarrierForm() {
             }
             error={errors.photoId}
             uploadedFile={uploadedFiles.photoId}
+            disabled={!formData.idType}
           />
+
+<div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Proof of Residence Type <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                instanceId="proof-type"
+                options={PROOF_TYPE_OPTIONS}
+                value={
+                  PROOF_TYPE_OPTIONS.find((opt) => opt.value === formData.proofType) || null
+                }
+                onChange={(opt: any) => {
+                  setField("proofType", opt ? opt.value : "")
+                }}
+                styles={selectStyles}
+                placeholder="Select proof of residence"
+              />
+              {errors.proofType && <p className="text-xs text-red-500 mt-1">{errors.proofType}</p>}
+            </div>
+
+
 
           <FileUpload
             label="Residential Ownership Document"
-            description="Gas Bill, Electricity Bill, Internet Bill, or Bank Statement"
+            description={formData.proofType}
             acceptedTypes={["application/pdf"]}
-            maxSize={5}
+            maxSize={3}
             fileType="ownershipDoc"
             onFileSelect={(fileData) =>
               setUploadedFiles((prev) => ({
@@ -521,6 +599,7 @@ export default function OwnerBarrierForm() {
             }
             error={errors.ownershipDoc}
             uploadedFile={uploadedFiles.ownershipDoc}
+            disabled={!formData.proofType}
           />
         </div>
 
@@ -564,17 +643,7 @@ export default function OwnerBarrierForm() {
 
         {/* Buttons */}
         <div className="flex gap-4 pt-6">
-          <Button
-            type="button"
-            className="flex-1 h-12"
-            style={{
-              backgroundColor: "white",
-              color: BRAND,
-              border: `1px solid ${BRAND}`,
-            }}
-          >
-            Save as Draft
-          </Button>
+        
           <Button
             type="submit"
             className="flex-1 h-12 text-white font-semibold transition-colors"
