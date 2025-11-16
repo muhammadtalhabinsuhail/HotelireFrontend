@@ -56,7 +56,7 @@ export default function VerificationPanel() {
                 clipRule="evenodd"
               />
             </svg>
-            <span className="text-sm text-white drop-shadow">Government-issued ID required</span>
+            <span className="text-md text-white drop-shadow">Government-issued ID required</span>
           </div>
           <div className="flex items-start gap-3">
             <svg
@@ -70,7 +70,7 @@ export default function VerificationPanel() {
                 clipRule="evenodd"
               />
             </svg>
-            <span className="text-sm text-white drop-shadow">Proof of ownership document</span>
+            <span className="text-md text-white drop-shadow">Proof of ownership document</span>
           </div>
           <div className="flex items-start gap-3">
             <svg
@@ -84,7 +84,7 @@ export default function VerificationPanel() {
                 clipRule="evenodd"
               />
             </svg>
-            <span className="text-sm text-white drop-shadow">Secure & encrypted data handling</span>
+            <span className="text-md text-white drop-shadow">Secure & encrypted data handling</span>
           </div>
         </div>
         </div>
