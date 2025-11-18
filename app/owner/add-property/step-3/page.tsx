@@ -11,7 +11,8 @@ import {
   SAFETY_FEATURES,
   SHARED_SPACES,
 } from "@/types/property";
-import { ChevronDown, Upload, X, Plus, Calendar, Bed, ArrowLeft, Check } from "lucide-react";
+import { Upload, X, Plus, Bed, ArrowLeft, Check, Trash2 } from "lucide-react";
+import StyledSelect from "@/components/StyledSelected";
 
 export default function Step3Page() {
   const router = useRouter();
@@ -47,10 +48,10 @@ export default function Step3Page() {
       type: "",
       count: 1,
       price: "",
-      availabilityStart: "",
-      availabilityEnd: "",
-      image: null,
-      imagePreview: "",
+      image1: null,
+      image1Preview: "",
+      image2: null,
+      image2Preview: "",
     };
     setLocalRooms([...rooms, newRoom]);
   };
@@ -66,20 +67,21 @@ export default function Step3Page() {
     setLocalRooms(rooms.filter(room => room.id !== id));
   };
 
-  const handleRoomImage = (id: string, file: File) => {
-    if (!file.type.startsWith("image/")) {
-      setErrors({ ...errors, [`room-${id}-image`]: "Only image files accepted" });
+  const handleRoomImage = (id: string, imageSlot: 'image1' | 'image2', file: File) => {
+    // Validate file type (JPG/PNG only)
+    if (!file.type.match(/^image\/(jpeg|jpg|png)$/)) {
+      setErrors({ ...errors, [`room-${id}-${imageSlot}`]: "Only JPG/PNG files accepted" });
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      setErrors({ ...errors, [`room-${id}-image`]: "Image must be less than 2MB" });
+      setErrors({ ...errors, [`room-${id}-${imageSlot}`]: "Image must be less than 2MB" });
       return;
     }
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      updateRoom(id, "image", file);
-      updateRoom(id, "imagePreview", e.target?.result as string);
+      updateRoom(id, imageSlot, file);
+      updateRoom(id, `${imageSlot}Preview` as keyof Room, e.target?.result as string);
     };
     reader.readAsDataURL(file);
   };
@@ -147,27 +149,42 @@ export default function Step3Page() {
 
     // Validate rooms
     rooms.forEach(room => {
-      if (!room.name) newErrors[`room-${room.id}-name`] = "Room name required";
+      // Apply trim to text fields
+      const trimmedName = room.name.trim();
+      const trimmedPrice = room.price.trim();
+      
+      if (!trimmedName) newErrors[`room-${room.id}-name`] = "Room name required";
       if (!room.type) newErrors[`room-${room.id}-type`] = "Room type required";
+      
+      // Room count validation: must be positive integer, max 999 (3 digits)
       if (!room.count || room.count < 1 || !Number.isInteger(room.count)) {
         newErrors[`room-${room.id}-count`] = "Room count must be a positive integer";
+      } else if (room.count > 999) {
+        newErrors[`room-${room.id}-count`] = "Room count cannot exceed 999";
       }
-      if (!room.price || parseFloat(room.price) <= 0) newErrors[`room-${room.id}-price`] = "Valid price required";
-      if (!room.availabilityStart) newErrors[`room-${room.id}-start`] = "Start date required";
-      if (!room.availabilityEnd) newErrors[`room-${room.id}-end`] = "End date required";
       
-      // Validate end date is after start date
-      if (room.availabilityStart && room.availabilityEnd) {
-        const startDate = new Date(room.availabilityStart);
-        const endDate = new Date(room.availabilityEnd);
-        if (endDate <= startDate) {
-          newErrors[`room-${room.id}-end`] = "End date must be after start date";
-        }
+      // Price validation: must be positive, max 99999 (5 digits)
+      if (!trimmedPrice || parseFloat(trimmedPrice) <= 0) {
+        newErrors[`room-${room.id}-price`] = "Valid price required";
+      } else if (parseFloat(trimmedPrice) > 99999) {
+        newErrors[`room-${room.id}-price`] = "Price cannot exceed $99,999 CAD";
+      }
+      
+      // Image validation: both images required
+      if (!room.image1 || !room.image1Preview) {
+        newErrors[`room-${room.id}-image1`] = "Image 1 is required";
+      }
+      if (!room.image2 || !room.image2Preview) {
+        newErrors[`room-${room.id}-image2`] = "Image 2 is required";
       }
     });
 
-    if (!amenities.checkInTime) newErrors.checkInTime = "Check-in time required";
-    if (!amenities.checkOutTime) newErrors.checkOutTime = "Check-out time required";
+    // Apply trim to amenities
+    const trimmedCheckInTime = amenities.checkInTime.trim();
+    const trimmedCheckOutTime = amenities.checkOutTime.trim();
+    
+    if (!trimmedCheckInTime) newErrors.checkInTime = "Check-in time required";
+    if (!trimmedCheckOutTime) newErrors.checkOutTime = "Check-out time required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -178,7 +195,7 @@ export default function Step3Page() {
     
     return rooms.every(room => 
       room.name && room.type && room.price && parseFloat(room.price) > 0 && 
-      room.availabilityStart && room.availabilityEnd
+      room.image1 && room.image2
     ) && amenities.checkInTime && amenities.checkOutTime;
   };
 
@@ -372,22 +389,23 @@ export default function Step3Page() {
             ) : (
               <div className="space-y-6">
                 {rooms.map((room, index) => (
-                  <div key={room.id} className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
-                    <div className="flex items-center justify-between">
+                  <div key={room.id} className="bg-white border border-gray-200 rounded-xl p-6 space-y-4 relative">
+                    <button
+                      onClick={() => removeRoom(room.id)}
+                      className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 transition-colors"
+                      data-testid={`button-remove-room-${room.id}`}
+                      title="Remove Room"
+                    >
+                      <Trash2 className="w-5 h-5 text-red-600 hover:text-red-700" />
+                    </button>
+                    
+                    <div>
                       <h3
-                        className="text-lg font-semibold text-gray-900"
+                        className="text-lg font-semibold text-gray-900 pr-10"
                         style={{ fontFamily: 'Poppins, sans-serif' }}
                       >
                         Room {index + 1}
                       </h3>
-                      <button
-                        onClick={() => removeRoom(room.id)}
-                        className="text-red-600 hover:text-red-700 text-sm font-medium"
-                        style={{ fontFamily: 'Inter, sans-serif' }}
-                        data-testid={`button-remove-room-${room.id}`}
-                      >
-                        Remove
-                      </button>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -398,7 +416,23 @@ export default function Step3Page() {
                         <input
                           type="text"
                           value={room.name}
-                          onChange={(e) => updateRoom(room.id, "name", e.target.value)}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            updateRoom(room.id, "name", value);
+                            
+                            // Immediate validation
+                            if (!value.trim()) {
+                              setErrors({ ...errors, [`room-${room.id}-name`]: "Room name is required" });
+                            } else {
+                              setErrors({ ...errors, [`room-${room.id}-name`]: "" });
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const value = e.target.value.trim();
+                            if (!value) {
+                              setErrors({ ...errors, [`room-${room.id}-name`]: "Room name is required" });
+                            }
+                          }}
                           placeholder="e.g., Deluxe Suite"
                           className={`w-full h-10 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#59A5B2] ${
                             errors[`room-${room.id}-name`] ? "border-red-500" : "border-gray-300"
@@ -407,7 +441,9 @@ export default function Step3Page() {
                           data-testid={`input-room-name-${room.id}`}
                         />
                         {errors[`room-${room.id}-name`] && (
-                          <p className="text-xs text-red-500">{errors[`room-${room.id}-name`]}</p>
+                          <p className="text-xs text-red-500" style={{ fontFamily: 'Inter, sans-serif' }}>
+                            {errors[`room-${room.id}-name`]}
+                          </p>
                         )}
                       </div>
 
@@ -415,23 +451,31 @@ export default function Step3Page() {
                         <label className="text-sm font-medium text-gray-700" style={{ fontFamily: 'Inter, sans-serif' }}>
                           Room Type *
                         </label>
-                        <div className="relative">
-                          <select
-                            value={room.type}
-                            onChange={(e) => updateRoom(room.id, "type", e.target.value)}
-                            className={`w-full h-10 px-4 pr-10 border rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-[#59A5B2] ${
-                              errors[`room-${room.id}-type`] ? "border-red-500" : "border-gray-300"
-                            }`}
-                            style={{ fontFamily: 'Inter, sans-serif' }}
-                            data-testid={`select-room-type-${room.id}`}
-                          >
-                            <option value="">Select type</option>
-                            {ROOM_TYPES.map(type => (
-                              <option key={type} value={type}>{type}</option>
-                            ))}
-                          </select>
-                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                        </div>
+                        <StyledSelect
+                          options={ROOM_TYPES.map(type => ({
+                            value: type,
+                            label: type,
+                          }))}
+                          value={room.type}
+                          onChange={(value) => {
+                            updateRoom(room.id, "type", value);
+                            
+                            // Immediate validation
+                            if (!value) {
+                              setErrors({ ...errors, [`room-${room.id}-type`]: "Room type is required" });
+                            } else {
+                              setErrors({ ...errors, [`room-${room.id}-type`]: "" });
+                            }
+                          }}
+                          placeholder="Select type"
+                          hasError={!!errors[`room-${room.id}-type`]}
+                          testId={`select-room-type-${room.id}`}
+                        />
+                        {errors[`room-${room.id}-type`] && (
+                          <p className="text-xs text-red-500" style={{ fontFamily: 'Inter, sans-serif' }}>
+                            {errors[`room-${room.id}-type`]}
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-2">
@@ -441,12 +485,43 @@ export default function Step3Page() {
                         <input
                           type="number"
                           min="1"
+                          max="999"
                           value={room.count}
-                          onChange={(e) => updateRoom(room.id, "count", parseInt(e.target.value) || 1)}
-                          className="w-full h-10 px-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#59A5B2]"
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            const numValue = parseInt(value);
+                            
+                            // Update value immediately
+                            updateRoom(room.id, "count", numValue || 0);
+                            
+                            // Immediate validation
+                            if (!value || isNaN(numValue) || numValue < 1) {
+                              setErrors({ ...errors, [`room-${room.id}-count`]: "Room count must be at least 1" });
+                            } else if (value.length > 3 || numValue > 999) {
+                              setErrors({ ...errors, [`room-${room.id}-count`]: "Room count cannot exceed 999" });
+                            } else {
+                              setErrors({ ...errors, [`room-${room.id}-count`]: "" });
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const value = parseInt(e.target.value) || 0;
+                            if (value > 999) {
+                              setErrors({ ...errors, [`room-${room.id}-count`]: "Room count cannot exceed 999" });
+                            } else if (value < 1) {
+                              setErrors({ ...errors, [`room-${room.id}-count`]: "Room count must be at least 1" });
+                            }
+                          }}
+                          className={`w-full h-10 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#59A5B2] ${
+                            errors[`room-${room.id}-count`] ? "border-red-500" : "border-gray-300"
+                          }`}
                           style={{ fontFamily: 'Inter, sans-serif' }}
                           data-testid={`input-room-count-${room.id}`}
                         />
+                        {errors[`room-${room.id}-count`] && (
+                          <p className="text-xs text-red-500" style={{ fontFamily: 'Inter, sans-serif' }}>
+                            {errors[`room-${room.id}-count`]}
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-2">
@@ -456,9 +531,35 @@ export default function Step3Page() {
                         <input
                           type="number"
                           min="0"
+                          max="99999"
                           step="0.01"
                           value={room.price}
-                          onChange={(e) => updateRoom(room.id, "price", e.target.value)}
+                          onChange={(e) => {
+                            const value = e.target.value.trim();
+                            updateRoom(room.id, "price", value);
+                            
+                            // Immediate validation
+                            const numValue = parseFloat(value);
+                            const digitsOnly = value.split('.')[0];
+                            
+                            if (!value || isNaN(numValue) || numValue <= 0) {
+                              setErrors({ ...errors, [`room-${room.id}-price`]: "Valid price required" });
+                            } else if (digitsOnly.length > 5) {
+                              setErrors({ ...errors, [`room-${room.id}-price`]: "Price cannot exceed 5 digits" });
+                            } else if (numValue > 99999) {
+                              setErrors({ ...errors, [`room-${room.id}-price`]: "Price cannot exceed $99,999" });
+                            } else {
+                              setErrors({ ...errors, [`room-${room.id}-price`]: "" });
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const value = parseFloat(e.target.value) || 0;
+                            if (value > 99999) {
+                              setErrors({ ...errors, [`room-${room.id}-price`]: "Price cannot exceed $99,999 CAD" });
+                            } else if (value <= 0) {
+                              setErrors({ ...errors, [`room-${room.id}-price`]: "Price must be greater than 0" });
+                            }
+                          }}
                           placeholder="0.00"
                           className={`w-full h-10 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#59A5B2] ${
                             errors[`room-${room.id}-price`] ? "border-red-500" : "border-gray-300"
@@ -466,76 +567,108 @@ export default function Step3Page() {
                           style={{ fontFamily: 'Inter, sans-serif' }}
                           data-testid={`input-room-price-${room.id}`}
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700" style={{ fontFamily: 'Inter, sans-serif' }}>
-                          Availability Start *
-                        </label>
-                        <input
-                          type="date"
-                          value={room.availabilityStart}
-                          onChange={(e) => updateRoom(room.id, "availabilityStart", e.target.value)}
-                          className={`w-full h-10 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#59A5B2] ${
-                            errors[`room-${room.id}-start`] ? "border-red-500" : "border-gray-300"
-                          }`}
-                          style={{ fontFamily: 'Inter, sans-serif' }}
-                          data-testid={`input-room-start-${room.id}`}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700" style={{ fontFamily: 'Inter, sans-serif' }}>
-                          Availability End *
-                        </label>
-                        <input
-                          type="date"
-                          value={room.availabilityEnd}
-                          onChange={(e) => updateRoom(room.id, "availabilityEnd", e.target.value)}
-                          className={`w-full h-10 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#59A5B2] ${
-                            errors[`room-${room.id}-end`] ? "border-red-500" : "border-gray-300"
-                          }`}
-                          style={{ fontFamily: 'Inter, sans-serif' }}
-                          data-testid={`input-room-end-${room.id}`}
-                        />
+                        {errors[`room-${room.id}-price`] && (
+                          <p className="text-xs text-red-500" style={{ fontFamily: 'Inter, sans-serif' }}>
+                            {errors[`room-${room.id}-price`]}
+                          </p>
+                        )}
                       </div>
                     </div>
 
-                    {/* Room Image */}
-                    <div className="space-y-2">
+                    {/* Room Images - Two Required */}
+                    <div className="space-y-3">
                       <label className="text-sm font-medium text-gray-700" style={{ fontFamily: 'Inter, sans-serif' }}>
-                        Room Picture
+                        Room Pictures (2 images required) *
                       </label>
-                      {!room.imagePreview ? (
-                        <div className="relative aspect-video max-w-xs border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#59A5B2] transition-colors">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleRoomImage(room.id, file);
-                            }}
-                            className="absolute inset-0 opacity-0 cursor-pointer"
-                          />
-                          <Upload className="w-8 h-8 text-[#59A5B2] mb-2" />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Image 1 */}
+                        <div className="space-y-2">
                           <p className="text-xs text-gray-600" style={{ fontFamily: 'Inter, sans-serif' }}>
-                            Upload room image (JPG/PNG, max 2MB)
+                            Image 1 *
                           </p>
+                          {!room.image1Preview ? (
+                            <div className="relative aspect-video border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#59A5B2] transition-colors">
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/jpg,image/png"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleRoomImage(room.id, 'image1', file);
+                                }}
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                data-testid={`input-room-image1-${room.id}`}
+                              />
+                              <Upload className="w-8 h-8 text-[#59A5B2] mb-2" />
+                              <p className="text-xs text-gray-600 text-center px-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                JPG/PNG, max 2MB
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="relative aspect-video rounded-lg overflow-hidden group">
+                              <img src={room.image1Preview} alt="Room Image 1" className="w-full h-full object-cover" />
+                              <button
+                                onClick={() => {
+                                  updateRoom(room.id, "image1", null);
+                                  updateRoom(room.id, "image1Preview", "");
+                                }}
+                                className="absolute top-2 right-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                data-testid={`button-remove-image1-${room.id}`}
+                              >
+                                <X className="w-5 h-5 text-gray-700" />
+                              </button>
+                            </div>
+                          )}
+                          {errors[`room-${room.id}-image1`] && (
+                            <p className="text-xs text-red-500" style={{ fontFamily: 'Inter, sans-serif' }}>
+                              {errors[`room-${room.id}-image1`]}
+                            </p>
+                          )}
                         </div>
-                      ) : (
-                        <div className="relative aspect-video max-w-xs rounded-lg overflow-hidden group">
-                          <img src={room.imagePreview} alt="Room" className="w-full h-full object-cover" />
-                          <button
-                            onClick={() => {
-                              updateRoom(room.id, "image", null);
-                              updateRoom(room.id, "imagePreview", "");
-                            }}
-                            className="absolute top-2 right-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-5 h-5 text-gray-700" />
-                          </button>
+
+                        {/* Image 2 */}
+                        <div className="space-y-2">
+                          <p className="text-xs text-gray-600" style={{ fontFamily: 'Inter, sans-serif' }}>
+                            Image 2 *
+                          </p>
+                          {!room.image2Preview ? (
+                            <div className="relative aspect-video border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#59A5B2] transition-colors">
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/jpg,image/png"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleRoomImage(room.id, 'image2', file);
+                                }}
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                data-testid={`input-room-image2-${room.id}`}
+                              />
+                              <Upload className="w-8 h-8 text-[#59A5B2] mb-2" />
+                              <p className="text-xs text-gray-600 text-center px-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                JPG/PNG, max 2MB
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="relative aspect-video rounded-lg overflow-hidden group">
+                              <img src={room.image2Preview} alt="Room Image 2" className="w-full h-full object-cover" />
+                              <button
+                                onClick={() => {
+                                  updateRoom(room.id, "image2", null);
+                                  updateRoom(room.id, "image2Preview", "");
+                                }}
+                                className="absolute top-2 right-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                data-testid={`button-remove-image2-${room.id}`}
+                              >
+                                <X className="w-5 h-5 text-gray-700" />
+                              </button>
+                            </div>
+                          )}
+                          {errors[`room-${room.id}-image2`] && (
+                            <p className="text-xs text-red-500" style={{ fontFamily: 'Inter, sans-serif' }}>
+                              {errors[`room-${room.id}-image2`]}
+                            </p>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -648,52 +781,40 @@ export default function Step3Page() {
                 <label className="text-sm font-medium text-gray-700" style={{ fontFamily: 'Inter, sans-serif' }}>
                   Check-in Time *
                 </label>
-                <div className="relative">
-                  <select
-                    value={amenities.checkInTime}
-                    onChange={(e) => {
-                      setLocalAmenities({ ...amenities, checkInTime: e.target.value });
-                      setErrors({ ...errors, checkInTime: "" });
-                    }}
-                    className={`w-full h-12 px-4 pr-10 border rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-[#59A5B2] ${
-                      errors.checkInTime ? "border-red-500" : "border-gray-300"
-                    }`}
-                    style={{ fontFamily: 'Inter, sans-serif' }}
-                    data-testid="select-checkin"
-                  >
-                    <option value="">Select time</option>
-                    {timeOptions.map(time => (
-                      <option key={time} value={time}>{time}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                </div>
+                <StyledSelect
+                  options={timeOptions.map(time => ({
+                    value: time,
+                    label: time,
+                  }))}
+                  value={amenities.checkInTime}
+                  onChange={(value) => {
+                    setLocalAmenities({ ...amenities, checkInTime: value });
+                    setErrors({ ...errors, checkInTime: "" });
+                  }}
+                  placeholder="Select time"
+                  hasError={!!errors.checkInTime}
+                  testId="select-checkin"
+                />
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700" style={{ fontFamily: 'Inter, sans-serif' }}>
                   Check-out Time *
                 </label>
-                <div className="relative">
-                  <select
-                    value={amenities.checkOutTime}
-                    onChange={(e) => {
-                      setLocalAmenities({ ...amenities, checkOutTime: e.target.value });
-                      setErrors({ ...errors, checkOutTime: "" });
-                    }}
-                    className={`w-full h-12 px-4 pr-10 border rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-[#59A5B2] ${
-                      errors.checkOutTime ? "border-red-500" : "border-gray-300"
-                    }`}
-                    style={{ fontFamily: 'Inter, sans-serif' }}
-                    data-testid="select-checkout"
-                  >
-                    <option value="">Select time</option>
-                    {timeOptions.map(time => (
-                      <option key={time} value={time}>{time}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                </div>
+                <StyledSelect
+                  options={timeOptions.map(time => ({
+                    value: time,
+                    label: time,
+                  }))}
+                  value={amenities.checkOutTime}
+                  onChange={(value) => {
+                    setLocalAmenities({ ...amenities, checkOutTime: value });
+                    setErrors({ ...errors, checkOutTime: "" });
+                  }}
+                  placeholder="Select time"
+                  hasError={!!errors.checkOutTime}
+                  testId="select-checkout"
+                />
               </div>
             </div>
           </section>

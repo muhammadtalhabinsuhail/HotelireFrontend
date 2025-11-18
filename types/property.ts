@@ -41,10 +41,10 @@ export interface Room {
   type: string;
   count: number;
   price: string;
-  availabilityStart: string;
-  availabilityEnd: string;
-  image: File | null;
-  imagePreview: string;
+  image1: File | null;
+  image1Preview: string;
+  image2: File | null;
+  image2Preview: string;
 }
 
 export interface PropertyAmenities {
