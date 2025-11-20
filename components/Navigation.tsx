@@ -22,7 +22,7 @@ export function Navigation() {
         />
       </Link>
 
-      <div className="flex flex-wrap items-center justify-center gap-4 lg:gap-12 [font-family:'Inter',Helvetica] font-bold text-black text-[15px] lg:text-[17px]">
+      <div className="flex flex-wrap items-center justify-center gap-4 lg:gap-6 [font-family:'Inter',Helvetica] font-bold text-black text-[15px] lg:text-[15px]">
         <Link
           href="/customer/explore-canada"
             prefetch={false}

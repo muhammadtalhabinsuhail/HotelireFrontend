@@ -202,7 +202,7 @@ export function SearchBar() {
   };
 
   return (
-    <div className="w-full max-w-[1240px] bg-white rounded flex flex-col md:flex-row items-stretch relative">
+    <div className="w-full max-w-[960px] bg-white rounded flex flex-col md:flex-row items-stretch relative ">
       {/* Location */}
       <div className="flex-1 px-4 md:px-[33px] py-3 md:py-0 md:border-r border-[#e5e5e5] flex flex-col justify-center relative">
         <label
