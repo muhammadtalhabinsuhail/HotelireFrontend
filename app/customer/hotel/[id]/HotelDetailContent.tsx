@@ -226,7 +226,7 @@ export default function HotelDetailContent({ id }: { id: string }) {
                     {/* Room Image */}
                     <div className="flex flex-col gap-2">
                       <img
-                        src={room.image}
+                        src={room.image}                        
                         alt={room.type}
                         className="w-full h-20 object-cover rounded-lg"
                       />

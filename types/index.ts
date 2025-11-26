@@ -47,5 +47,7 @@ export interface Listing {
   stars: string;
   price: string;
   amenities: string[];
+  checkIn: string;
+  checkOut: string;
   description: string;
 }

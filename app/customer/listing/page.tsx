@@ -53,6 +53,7 @@ export default function ListingPage() {
     }
   });
 
+  
   const totalPages = Math.ceil(sortedListings.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -64,7 +65,7 @@ export default function ListingPage() {
       <Navigation />
 
       {/* Search Section */}
-      <section className="w-full bg-[#f5f6fd] py-6 md:py-8 px-4 md:px-8 lg:px-[203px]">
+      <section className="w-full bg-[#f5f6fd] py-6 md:py-8 px-4 md:px-8 lg:px-[203px] flex justify-center">
         <SearchBar />
       </section>
 
@@ -81,7 +82,7 @@ export default function ListingPage() {
             {/* Header with Sort and View Toggle */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
               <div>
-                <h1 className="[font-family:'Poppins',Helvetica] font-bold text-[#3f2c77] text-xl md:text-2xl mb-2">
+                <h1 className="[font-family:'Poppins',Helvetica] font-bold text-[#59a5b2] text-xl md:text-2xl mb-2">
                   Hotels in Ontario
                 </h1>
                 <p className="[font-family:'Inter',Helvetica] font-medium text-gray-600 text-sm md:text-base">
@@ -107,7 +108,7 @@ export default function ListingPage() {
                     className="w-[300px] overflow-y-auto"
                   >
                     <SheetHeader>
-                      <SheetTitle className="[font-family:'Poppins',Helvetica] font-bold text-[#3f2c77]">
+                      <SheetTitle className="[font-family:'Poppins',Helvetica] font-bold text-[#59a5b2]">
                         Filters
                       </SheetTitle>
                     </SheetHeader>
@@ -158,7 +159,7 @@ export default function ListingPage() {
                   <Button
                     variant={viewMode === "list" ? "default" : "ghost"}
                     size="sm"
-                    className={`px-3 ${viewMode === "list" ? "bg-[#3f2c77] hover:bg-[#2a2158]" : ""}`}
+                    className={`px-3 ${viewMode === "list" ? "bg-[#59a5b2] hover:bg-[#2a2158]" : ""}`}
                     onClick={() => setViewMode("list")}
                     data-testid="button-view-list"
                   >
@@ -167,7 +168,7 @@ export default function ListingPage() {
                   <Button
                     variant={viewMode === "map" ? "default" : "ghost"}
                     size="sm"
-                    className={`px-3 ${viewMode === "map" ? "bg-[#3f2c77] hover:bg-[#2a2158]" : ""}`}
+                    className={`px-3 ${viewMode === "map" ? "bg-[#59a5b2] hover:bg-[#2a2158]" : ""}`}
                     onClick={() => setViewMode("map")}
                     data-testid="button-view-map"
                   >
@@ -190,8 +191,8 @@ export default function ListingPage() {
             {viewMode === "map" && (
               <div className="w-full h-[600px] bg-gray-100 rounded-lg flex items-center justify-center border border-gray-300">
                 <div className="text-center">
-                  <MapPin className="w-12 h-12 text-[#3f2c77] mx-auto mb-4" />
-                  <p className="[font-family:'Poppins',Helvetica] font-semibold text-[#3f2c77] text-lg mb-2">
+                  <MapPin className="w-12 h-12 text-[#59a5b2] mx-auto mb-4" />
+                  <p className="[font-family:'Poppins',Helvetica] font-semibold text-[#59a5b2] text-lg mb-2">
                     Map View
                   </p>
                   <p className="[font-family:'Inter',Helvetica] text-gray-600 text-sm">
@@ -221,7 +222,7 @@ export default function ListingPage() {
                       variant={currentPage === page ? "default" : "outline"}
                       className={
                         currentPage === page
-                          ? "bg-[#3f2c77] hover:bg-[#2a2158]"
+                          ? "bg-[#59a5b2] hover:bg-[#2a2158]"
                           : ""
                       }
                       onClick={() => setCurrentPage(page)}
