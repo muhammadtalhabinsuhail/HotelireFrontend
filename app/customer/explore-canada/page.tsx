@@ -394,7 +394,7 @@ export default function ExploreCanadaPage() {
           priority
         />
         <div className="absolute inset-0 bg-[#080808] opacity-50" />
-        <div className="relative z-10 flex flex-col items-start justify-center h-full px-4">
+        <div className="relative z-10 flex flex-col items-start justify-center h-full px-6 md:px-12 lg:px-[203px]">
           <div className="text-center mb-2 md:mb-8 lg:mb-[4px]">
             <h2 className="[text-shadow:4.45px_4.45px_4.45px_#00000040] [font-family:'Poppins',Helvetica] font-bold text-[#febc11] text-[28px] md:text-[40px] lg:text-[53.3px]">
               Explore Canada

@@ -1,351 +1,828 @@
 "use client";
 
-import { useState } from "react";
-import { SearchBar } from "@/components/SearchBar";
-import { Star, Users, Calendar } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { useRouter } from "next/navigation";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import {
+  ChevronDown,
+  CalendarIcon,
+  Users,
+  MapPin,
+  Minus,
+  Plus,
+  User,
+  X,
+  Star,
+} from "lucide-react";
 
-export default function HotelDetailContent({ id }: { id: string }) {
-  const [checkIn, setCheckIn] = useState("May 05");
-  const [checkOut, setCheckOut] = useState("June 18");
-  const [guests, setGuests] = useState("2 adults · 1 children · 1 room");
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faWifi,
+  faSquareParking,
+  faUtensils,
+  faSwimmingPool,
+  faDumbbell,
+  faSnowflake,
+  faFire,
+  faShirt,
+  faTv,
+  faHotTubPerson,
+  faFireBurner,
+  faPaw,
+  faWheelchair,
+  faElevator,
+  faMugHot,
+  faBell,
+  faFireExtinguisher,
+  faBriefcaseMedical,
+  faVideo,
+  faKey,
+  faShieldHalved,
+  faClock,
+  faCouch,
+  faMountainSun,
+  faTree,
+  faHotel,
+  faSearch,
+  faUserGroup,
+} from "@fortawesome/free-solid-svg-icons";
 
-  // Mock hotel data - ready for API integration
-  const hotel = {
-    id: id,
-    name: "Days Inn and Suites over the Niagara Falls",
-    location: "Horseshoe Falls, The Falls, Niagara Falls",
-    rating: 4.8,
-    reviewCount: 3014,
-    checkInDate: "May 16, 2025",
-    checkOutDate: "June 15, 2025",
-    propertyHighlights: "Just a 10-minute walk from Horseshoe Falls, this Days Inn by Wyndham Niagara Falls Near The Falls include All classically furnished rooms at this Days Inn by Wyndham Niagara Falls Hotel Near The Falls include a seating area.",
-    overview: "Rental discounts at this property are subject to book dates, stay dates and other available deals. Please fill in the travel link from luminous falls, this Days Inn by...\n\nAll classically furnished rooms at this Days Inn by Wyndham Niagara Falls Near The Falls include a seating area. A coffee maker and cable TV are provided in every room. Some rooms offer an oval-shaped hot tub while others are equipped with...",
-    images: [
-      "/figmaAssets/rectangle-290.png",
-      "/figmaAssets/rectangle-334.png",
-      "/figmaAssets/rectangle-290.png",
-      "/figmaAssets/rectangle-334.png",
-      "/figmaAssets/rectangle-334.png"
-    ],
-    amenities: [
-      { icon: "non-smoking", label: "Non-smoking rooms" },
-      { icon: "kitchen", label: "Kitchen" },
-      { icon: "wifi", label: "Free Wifi" },
-      { icon: "parking", label: "Parking" },
-      { icon: "safety", label: "Safety & security" },
-      { icon: "living", label: "Living area" }
-    ],
-    rooms: [
-      {
-        id: 1,
-        image: "/figmaAssets/rectangle-334.png",
-        type: "Standard Room",
-        benefits: ["Pay at the hotel", "Pay at the hotel", "Pay at the hotel"],
-        sleeps: 3,
-        price: 390,
-        priceNote: "Includes taxes and charges",
-        selector: "1(US$ 4,120)"
-      },
-      {
-        id: 2,
-        image: "/figmaAssets/rectangle-334.png",
-        type: "Deluxe Room",
-        benefits: ["Pay at the hotel", "Pay at the hotel", "Pay at the hotel"],
-        sleeps: 2,
-        price: 170,
-        priceNote: "Includes taxes and charges",
-        selector: "1(US$ 4,120)"
-      }
-    ]
+// Canadian cities for location autocomplete
+const canadianCities = [
+  "Toronto, Ontario",
+  "Montreal, Quebec",
+  "Vancouver, British Columbia",
+  "Calgary, Alberta",
+  "Edmonton, Alberta",
+  "Ottawa, Ontario",
+  "Niagara Falls, Ontario",
+  "Halifax, Nova Scotia",
+  "Victoria, British Columbia",
+  "Quebec City, Quebec",
+];
+
+// Property location (mock)
+const propertyLocation = "Niagara Falls, Ontario";
+
+// Room type for cart
+interface CartItem {
+  roomType: string;
+  quantity: number;
+  pricePerNight: number;
+}
+
+export default function HotelDetailPage({id}: {id: string}) {
+
+  const router = useRouter();
+  // Search bar state
+  const [location, setLocation] = useState(propertyLocation);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [checkInDate, setCheckInDate] = useState<Date | undefined>();
+  const [checkOutDate, setCheckOutDate] = useState<Date | undefined>();
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(1);
+  const [isGuestsOpen, setIsGuestsOpen] = useState(false);
+
+  // Room selection state (quantity selectors before "Add")
+  const [quadRoomQty, setQuadRoomQty] = useState(0);
+  const [kingRoomQty, setKingRoomQty] = useState(0);
+
+  // Cart state (rooms added to sidebar)
+  const [cart, setCart] = useState<CartItem[]>([]);
+
+  // Validation state
+  const [showValidation, setShowValidation] = useState(false);
+
+
+  useEffect(() => {
+   if(!id || id === "") {
+
+    router.push("/not-found/gtgtgt");  
+
+   }
+
+  //  if(--> not exsits)
+
+  }, [])
+  
+
+  const filteredCities = location
+    ? canadianCities.filter((city) =>
+        city.toLowerCase().includes(location.toLowerCase())
+      )
+    : [];
+
+  const handleLocationChange = (value: string) => {
+    setLocation(value);
+    setShowSuggestions(value.length > 0);
   };
 
+  const selectCity = (city: string) => {
+    setLocation(city);
+    setShowSuggestions(false);
+  };
+
+
+
+
+  // Add room to cart
+  const addToCart = (roomType: string, quantity: number, pricePerNight: number) => {
+    if (quantity === 0) return;
+
+    setCart((prev) => {
+      const existingIndex = prev.findIndex((item) => item.roomType === roomType);
+      if (existingIndex >= 0) {
+        const updated = [...prev];
+        updated[existingIndex].quantity += quantity;
+        return updated;
+      }
+      return [...prev, { roomType, quantity, pricePerNight }];
+    });
+
+    // Reset the selector after adding
+    if (roomType === "Quad Room") setQuadRoomQty(0);
+    if (roomType === "King Room") setKingRoomQty(0);
+  };
+
+  // Remove room from cart
+  const removeFromCart = (roomType: string) => {
+    setCart((prev) => prev.filter((item) => item.roomType !== roomType));
+  };
+
+  // Calculate total
+  const calculateTotal = () => {
+    return cart.reduce((sum, item) => sum + item.quantity * item.pricePerNight, 0);
+  };
+
+  // Calculate nights
+  const calculateNights = () => {
+    if (checkInDate && checkOutDate) {
+      const diffTime = Math.abs(checkOutDate.getTime() - checkInDate.getTime());
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
+    return 1;
+  };
+
+  // Handle reserve
+  const handleReserve = () => {
+    if (!checkInDate || !checkOutDate || cart.length === 0) {
+      setShowValidation(true);
+      return;
+    }
+    setShowValidation(false);
+    console.log("Reservation submitted:", { checkInDate, checkOutDate, adults, children, cart });
+    alert("Reservation submitted successfully!");
+  };
+
+  // Amenities data
+  const amenities = [
+    { icon: faWifi, label: "Wi-Fi" },
+    { icon: faSquareParking, label: "Free Parking" },
+    { icon: faUtensils, label: "Kitchen" },
+    { icon: faSwimmingPool, label: "Pool" },
+    { icon: faDumbbell, label: "Gym/Fitness Center" },
+    { icon: faSnowflake, label: "Air Conditioning" },
+    { icon: faFire, label: "Heater" },
+    { icon: faShirt, label: "Washer" },
+    { icon: faShirt, label: "Dryer" },
+    { icon: faTv, label: "TV" },
+    { icon: faHotTubPerson, label: "Hot Tub" },
+    { icon: faFireBurner, label: "BBQ Grill" },
+    { icon: faPaw, label: "Pet Friendly" },
+    { icon: faWheelchair, label: "Wheelchair Accessible" },
+    { icon: faElevator, label: "Elevator" },
+    { icon: faMugHot, label: "Breakfast Included" },
+  ];
+
+  // Safety features data
+  const safetyFeatures = [
+    { icon: faBell, label: "Smoke detectors" },
+    { icon: faBell, label: "Carbon monoxide detectors" },
+    { icon: faFireExtinguisher, label: "Fire extinguisher" },
+    { icon: faBriefcaseMedical, label: "First aid kit" },
+    { icon: faVideo, label: "Surveillance camera" },
+    { icon: faKey, label: "Keyless entry" },
+    { icon: faShieldHalved, label: "Security guard" },
+    { icon: faClock, label: "24/7 front desk" },
+  ];
+
+  // Shared spaces data
+  const sharedSpaces = [
+    { icon: faUtensils, label: "Kitchen" },
+    { icon: faMountainSun, label: "Balcony" },
+    { icon: faCouch, label: "Living Room" },
+    { icon: faHotel, label: "Rooftop" },
+    { icon: faTree, label: "Patio" },
+    { icon: faTree, label: "Garden" },
+    { icon: faMountainSun, label: "Terrace" },
+  ];
+
   return (
-    <>
-      {/* Search Bar Section */}
+    <div className="bg-white w-full flex flex-col min-h-screen">
+    
+      {/* ============================================ */}
+      {/* INLINE SEARCH BAR SECTION */}
+      {/* ============================================ */}
       <section className="w-full bg-[#F5F6FD] py-6 px-4 md:px-8 lg:px-[203px]">
-      <SearchBar />
+        <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+            {/* Location */}
+            <div className="flex-1 px-4 py-3 lg:py-0 lg:border-r border-gray-200 flex flex-col justify-center relative">
+              <label
+                htmlFor="location"
+                className="font-semibold text-[#59A5B2] text-[13px] md:text-[15px] mb-1 flex items-center gap-2"
+                style={{ fontFamily: "Poppins, sans-serif" }}
+              >
+                <MapPin className="w-4 h-4" />
+                Location
+              </label>
+              <Input
+                id="location"
+                type="text"
+                value={location}
+                onChange={(e) => handleLocationChange(e.target.value)}
+                onFocus={() => location && setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                placeholder="Where are you going?"
+                className="font-normal text-gray-600 text-[12px] md:text-[13px] border-0 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-400"
+                style={{ fontFamily: "Poppins, sans-serif" }}
+                data-testid="input-location"
+              />
+              {showSuggestions && filteredCities.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-md shadow-lg max-h-[300px] overflow-y-auto z-50">
+                  {filteredCities.slice(0, 10).map((city) => (
+                    <button
+                      key={city}
+                      onClick={() => selectCity(city)}
+                      className="w-full text-left px-4 py-2 hover:bg-[#f5f6fd] text-sm text-[#59A5B2] transition-colors"
+                      style={{ fontFamily: "Poppins, sans-serif" }}
+                      data-testid={`suggestion-${city}`}
+                    >
+                      {city}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {showValidation && !location && (
+                <span className="text-red-500 text-xs mt-1">Please select a location</span>
+              )}
+            </div>
+
+            {/* Check-in / Check-out */}
+            <div className="flex-1 px-4 py-3 lg:py-0 lg:border-r border-gray-200 flex flex-col justify-center">
+              <label
+                className="font-semibold text-[#59A5B2] text-[13px] md:text-[15px] mb-1 flex items-center gap-2"
+                style={{ fontFamily: "Poppins, sans-serif" }}
+              >
+                <CalendarIcon className="w-4 h-4" />
+                Check in - Check out
+              </label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="font-normal text-gray-600 text-[12px] md:text-[13px] border-0 p-0 h-auto justify-start hover:bg-transparent"
+                    style={{ fontFamily: "Poppins, sans-serif" }}
+                    data-testid="button-date-picker"
+                  >
+                    {checkInDate && checkOutDate
+                      ? `${format(checkInDate, "MMM dd, yyyy")} - ${format(checkOutDate, "MMM dd, yyyy")}`
+                      : "Select dates"}
+                    <ChevronDown className="ml-auto w-3.5 h-2" aria-hidden="true" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <div className="p-4 flex flex-col md:flex-row gap-6">
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-[#59A5B2] mb-2">Check-in</p>
+                      <Calendar
+                        mode="single"
+                        selected={checkInDate}
+                        onSelect={setCheckInDate}
+                        disabled={(date) => date < new Date()}
+                        className="rounded-md border"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-[#59A5B2] mb-2">Check-out</p>
+                      <Calendar
+                        mode="single"
+                        selected={checkOutDate}
+                        onSelect={setCheckOutDate}
+                        disabled={(date) => !checkInDate || date <= checkInDate}
+                        className="rounded-md border"
+                      />
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              {showValidation && (!checkInDate || !checkOutDate) && (
+                <span className="text-red-500 text-xs mt-1">Please select check-in and check-out dates</span>
+              )}
+            </div>
+
+            {/* Guests */}
+            <div className="flex-1 px-4 py-3 lg:py-0 flex flex-col justify-center">
+              <label
+                className="font-semibold text-[#59A5B2] text-[13px] md:text-[15px] mb-1 flex items-center gap-2"
+                style={{ fontFamily: "Poppins, sans-serif" }}
+              >
+                <Users className="w-4 h-4" />
+                Guests
+              </label>
+              <Popover open={isGuestsOpen} onOpenChange={setIsGuestsOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="font-normal text-gray-600 text-[12px] md:text-[13px] border-0 p-0 h-auto justify-start hover:bg-transparent"
+                    style={{ fontFamily: "Poppins, sans-serif" }}
+                    data-testid="button-guests"
+                  >
+                    {`${adults} ${adults === 1 ? "adult" : "adults"}${children > 0 ? ` · ${children} ${children === 1 ? "child" : "children"}` : ""}`}
+                    <ChevronDown className="ml-auto w-3.5 h-2" aria-hidden="true" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[280px] p-4" align="start">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-[#59A5B2] text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>Adults</p>
+                        <p className="text-xs text-gray-500" style={{ fontFamily: "Poppins, sans-serif" }}>Age 13+</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-8 w-8 rounded-full"
+                          onClick={() => setAdults(Math.max(1, adults - 1))}
+                          disabled={adults <= 1}
+                          data-testid="button-decrease-adults"
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <span className="w-8 text-center font-semibold" data-testid="text-adults-count">
+                          {adults}
+                        </span>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-8 w-8 rounded-full"
+                          onClick={() => setAdults(adults + 1)}
+                          data-testid="button-increase-adults"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-[#59A5B2] text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>Children</p>
+                        <p className="text-xs text-gray-500" style={{ fontFamily: "Poppins, sans-serif" }}>Ages 2-12</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-8 w-8 rounded-full"
+                          onClick={() => setChildren(Math.max(0, children - 1))}
+                          disabled={children <= 0}
+                          data-testid="button-decrease-children"
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <span className="w-8 text-center font-semibold" data-testid="text-children-count">
+                          {children}
+                        </span>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-8 w-8 rounded-full"
+                          onClick={() => setChildren(children + 1)}
+                          data-testid="button-increase-children"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Search Button */}
+            {/* <Button
+              className="bg-[#59A5B2] hover:bg-[#4a8f9a] text-white px-6 self-center"
+              data-testid="button-search"
+            >
+              <FontAwesomeIcon icon={faSearch} className="w-4 h-4 mr-2" />
+              Search
+            </Button> */}
+          </div>
+        </div>
       </section>
 
       {/* Main Content Container */}
       <div className="w-full px-4 md:px-8 lg:px-[203px] py-8">
-        
         {/* Hotel Title */}
         <h1
-          className="text-[28px] md:text-[32px] font-bold text-[#59A5B2] mb-6"
-          style={{ fontFamily: 'Poppins, sans-serif' }}
+          className="text-[28px] md:text-[32px] font-bold text-[#59A5B2] mb-1"
+          style={{ fontFamily: "Poppins, sans-serif" }}
+          data-testid="text-hotel-title"
         >
-          {hotel.name}
+          Days Inn and Suites over the Niagara Falls
         </h1>
+        <p className="text-gray-500 text-sm mb-2" style={{ fontFamily: "Inter, sans-serif" }} data-testid="text-hotel-subtitle">
+          Horseshoe Falls, The Falls
+        </p>
+        <p className="text-gray-600 text-sm mb-6" style={{ fontFamily: "Inter, sans-serif" }} data-testid="text-hotel-location">
+          Niagara Falls, Ontario
+        </p>
 
         {/* Main Content + Sidebar Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2">
-            
-            {/* Hotel Gallery */}
+            {/* Hotel Gallery - Placeholder */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
-              {/* Large Image */}
-              <div className="w-full h-[300px] md:h-[400px]">
-                <img
-                  src={hotel.images[0]}
-                  alt="Hotel main view"
-                  className="w-full h-full object-cover rounded-lg"
-                />
-              </div>
-              
-              {/* Small Images Grid */}
+              <div className="w-full h-[300px] md:h-[400px] bg-gray-200 rounded-lg" />
               <div className="grid grid-cols-2 gap-3">
-                {hotel.images.slice(1).map((img, idx) => (
-                  <div key={idx} className="w-full h-[194px]">
-                    <img
-                      src={img}
-                      alt={`Hotel view ${idx + 2}`}
-                      className="w-full h-full object-cover rounded-lg"
-                    />
-                  </div>
-                ))}
+                <div className="w-full h-[194px] bg-gray-200 rounded-lg" />
+                <div className="w-full h-[194px] bg-gray-200 rounded-lg" />
+                <div className="w-full h-[194px] bg-gray-200 rounded-lg" />
+                <div className="w-full h-[194px] bg-gray-200 rounded-lg" />
               </div>
             </div>
 
-            {/* Property Highlights */}
+            {/* Overview And Rules */}
             <section className="mb-8">
-              <h2
-                className="text-[20px] font-bold text-[#59A5B2] mb-4"
-                style={{ fontFamily: 'Poppins, sans-serif' }}
-              >
-                Property highlights
-              </h2>
-              <p
-                className="text-[14px] text-gray-700 leading-relaxed"
-                style={{ fontFamily: 'Inter, sans-serif' }}
-              >
-                {hotel.propertyHighlights}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                <h2 className="text-[20px] font-bold text-[#59A5B2]" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  Overview And Rules
+                </h2>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500" style={{ fontFamily: "Inter, sans-serif" }}>3014 reviews</span>
+                  <div className="flex items-center gap-1 bg-[#59A5B2] text-white px-2 py-1 rounded">
+                    <Star className="w-4 h-4 fill-current" />
+                    <span className="font-bold text-sm">4.8</span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-[14px] text-gray-700 leading-relaxed mb-4" style={{ fontFamily: "Inter, sans-serif" }}>
+                Genius discounts at this property are subject to book dates, stay dates and other available deals.
               </p>
-            </section>
-
-            {/* Overview */}
-            <section className="mb-8">
-              <h2
-                className="text-[20px] font-bold text-[#59A5B2] mb-4"
-                style={{ fontFamily: 'Poppins, sans-serif' }}
-              >
-                Overview
-              </h2>
-              <p
-                className="text-[14px] text-gray-700 leading-relaxed whitespace-pre-line"
-                style={{ fontFamily: 'Inter, sans-serif' }}
-              >
-                {hotel.overview}
+              <p className="text-[14px] text-gray-700 leading-relaxed mb-4" style={{ fontFamily: "Inter, sans-serif" }}>
+                Just a 10-minute walk from Horseshoe Falls, this Days Inn by Wyndham Niagara Falls Near The Falls.
+              </p>
+              <p className="text-[14px] text-gray-700 leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
+                All classically furnished rooms at the Days Inn by Wyndham Niagara Falls Near The falls include a seating area. A coffee maker and hairdryer are provided in every room. Some rooms offer an oval-shaped hot tub, while others are equipped with heart-shaped hot tub.
               </p>
             </section>
 
             {/* Most popular services & amenities */}
             <section className="mb-10">
-              <h2
-                className="text-[20px] font-bold text-[#59A5B2] mb-6"
-                style={{ fontFamily: 'Poppins, sans-serif' }}
-              >
+              <h2 className="text-[20px] font-bold text-[#59A5B2] mb-6" style={{ fontFamily: "Poppins, sans-serif" }}>
                 Most popular services & amenities
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                <div className="flex items-center gap-3">
-                  <svg className="w-6 h-6 text-[#59A5B2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                  </svg>
-                  <span className="text-[14px] text-[#59A5B2]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    Non-smoking rooms
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <svg className="w-6 h-6 text-[#59A5B2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
-                  <span className="text-[14px] text-[#59A5B2]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    Kitchen
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <svg className="w-6 h-6 text-[#59A5B2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
-                  </svg>
-                  <span className="text-[14px] text-[#59A5B2]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    Free Wifi
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <svg className="w-6 h-6 text-[#59A5B2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                  <span className="text-[14px] text-[#59A5B2]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    Parking
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <svg className="w-6 h-6 text-[#59A5B2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                  <span className="text-[14px] text-[#59A5B2]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    Safety & security
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <svg className="w-6 h-6 text-[#59A5B2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                  </svg>
-                  <span className="text-[14px] text-[#59A5B2]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    Living area
-                  </span>
-                </div>
-              </div>
-            </section>
-
-            {/* Available Rooms */}
-            <section className="mb-12">
-              <h2
-                className="text-[24px] font-bold text-[#59A5B2] mb-6"
-                style={{ fontFamily: 'Poppins, sans-serif' }}
-              >
-                Available Rooms
-              </h2>
-              
-              {/* Rooms Table */}
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                {/* Header */}
-                <div className="grid grid-cols-5 bg-[#FEC328] py-4 px-4 font-bold text-[#000000] text-sm" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                  <div>Room Type</div>
-                  <div>Benefits</div>
-                  <div>Sleeps</div>
-                  <div>Price for per night</div>
-                  <div>Select Rooms</div>
-                </div>
-                
-                {/* Rooms */}
-                {hotel.rooms.map((room) => (
-                  <div key={room.id} className="grid grid-cols-5 gap-4 p-4 border-b border-gray-200 items-center">
-                    {/* Room Image */}
-                    <div className="flex flex-col gap-2">
-                      <img
-                        src={room.image}                        
-                        alt={room.type}
-                        className="w-full h-20 object-cover rounded-lg"
-                      />
-                    </div>
-                    
-                    {/* Benefits */}
-                    <div className="flex flex-col gap-2">
-                      <p className="font-semibold text-sm text-[#59A5B2] mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        Your price includes:
-                      </p>
-                      {room.benefits.map((benefit, idx) => (
-                        <div key={idx} className="flex items-center gap-2 text-xs text-gray-700">
-                          <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span style={{ fontFamily: 'Inter, sans-serif' }}>{benefit}</span>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {/* Sleeps */}
-                    <div className="flex items-center justify-center gap-1">
-                      {Array.from({ length: room.sleeps }).map((_, idx) => (
-                        <Users key={idx} className="w-5 h-5 text-[#59A5B2]" />
-                      ))}
-                    </div>
-                    
-                    {/* Price */}
-                    <div className="flex flex-col items-center">
-                      <span className="text-3xl font-bold text-[#59A5B2]" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        ${room.price}
-                      </span>
-                      <span className="text-xs text-gray-500 text-center" style={{ fontFamily: 'Inter, sans-serif' }}>
-                        {room.priceNote}
-                      </span>
-                    </div>
-                    
-                    {/* Reserve Section */}
-                    <div className="flex flex-col items-center gap-3">
-                      <select
-                        className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#59A5B2] bg-white"
-                        style={{ fontFamily: 'Inter, sans-serif' }}
-                        data-testid={`select-room-${room.id}`}
-                      >
-                        <option>{room.selector}</option>
-                        <option>2(US$ 8,240)</option>
-                      </select>
-                      <button
-                        className="w-full px-6 py-2 bg-[#59A5B2] hover:bg-[#4c7e87] text-white font-semibold rounded-md transition-all duration-300"
-                        style={{ fontFamily: 'Poppins, sans-serif' }}
-                        data-testid={`button-reserve-${room.id}`}
-                      >
-                        Reserve
-                      </button>
-                    </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {amenities.map((amenity, idx) => (
+                  <div key={idx} className="flex items-center gap-3">
+                    <FontAwesomeIcon icon={amenity.icon} className="w-5 h-5 text-[#59A5B2]" />
+                    <span className="text-[13px] text-[#59A5B2]" style={{ fontFamily: "Inter, sans-serif" }}>
+                      {amenity.label}
+                    </span>
                   </div>
                 ))}
               </div>
             </section>
+
+            {/* Safety Features */}
+            <section className="mb-10">
+              <h2 className="text-[20px] font-bold text-[#59A5B2] mb-6" style={{ fontFamily: "Poppins, sans-serif" }}>
+                Safety Features
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {safetyFeatures.map((feature, idx) => (
+                  <div key={idx} className="flex items-center gap-3">
+                    <FontAwesomeIcon icon={feature.icon} className="w-5 h-5 text-[#59A5B2]" />
+                    <span className="text-[13px] text-[#59A5B2]" style={{ fontFamily: "Inter, sans-serif" }}>
+                      {feature.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Shared Spaces */}
+            <section className="mb-10">
+              <h2 className="text-[20px] font-bold text-[#59A5B2] mb-6" style={{ fontFamily: "Poppins, sans-serif" }}>
+                Shared Spaces
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {sharedSpaces.map((space, idx) => (
+                  <div key={idx} className="flex items-center gap-3">
+                    <FontAwesomeIcon icon={space.icon} className="w-5 h-5 text-[#59A5B2]" />
+                    <span className="text-[13px] text-[#59A5B2]" style={{ fontFamily: "Inter, sans-serif" }}>
+                      {space.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* ============================================ */}
+            {/* AVAILABLE ROOMS SECTION - NEW PDF DESIGN */}
+            {/* ============================================ */}
+            <section className="mb-12">
+              <h2 className="text-[24px] font-bold text-[#59A5B2] mb-6" style={{ fontFamily: "Poppins, sans-serif" }}>
+                Available Rooms
+              </h2>
+
+              {/* Rooms Table */}
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                {/* Table Header - Desktop */}
+                <div className="hidden md:grid grid-cols-12 bg-[#FEC328] py-4 px-6">
+                  <div className="col-span-3 font-bold text-black text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
+                    Room Type
+                  </div>
+                  <div className="col-span-3 font-bold text-black text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
+                    Room Type
+                  </div>
+                  <div className="col-span-3 font-bold text-black text-sm text-center" style={{ fontFamily: "Poppins, sans-serif" }}>
+                    Price for per night
+                  </div>
+                  <div className="col-span-3 font-bold text-black text-sm text-center" style={{ fontFamily: "Poppins, sans-serif" }}>
+                    Select Rooms
+                  </div>
+                </div>
+
+                {/* Mobile Header */}
+                <div className="md:hidden bg-[#FEC328] py-3 px-4">
+                  <span className="font-bold text-black text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
+                    Available Rooms
+                  </span>
+                </div>
+
+                {/* Room Row 1 - Quad Room */}
+                <div className="border-b border-gray-200 p-4 md:p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                    {/* Col 1: Room Images */}
+                    <div className="col-span-1 md:col-span-3">
+                      <p className="text-xs text-gray-500 mb-2 md:hidden" style={{ fontFamily: "Inter, sans-serif" }}>
+                        Room Name
+                      </p>
+                      <div className="flex gap-2">
+                        <div className="w-20 h-16 bg-gray-200 rounded-lg flex-shrink-0" />
+                        <div className="w-20 h-16 bg-gray-200 rounded-lg flex-shrink-0" />
+                      </div>
+                    </div>
+
+                    {/* Col 2: Room Type + Guest Icons */}
+                    <div className="col-span-1 md:col-span-3">
+                      <h3 className="font-semibold text-[#59A5B2] text-lg mb-2" style={{ fontFamily: "Poppins, sans-serif" }}>
+                        Quad Room
+                      </h3>
+                      <div className="flex items-center gap-1 justify-center">
+                        <FontAwesomeIcon icon={faUserGroup} className="w-4 h-4 text-[#59A5B2]" />
+                        <FontAwesomeIcon icon={faUserGroup} className="w-4 h-4 text-[#59A5B2]" />
+                        <FontAwesomeIcon icon={faUserGroup} className="w-4 h-4 text-[#59A5B2]" />
+                        <FontAwesomeIcon icon={faUserGroup} className="w-4 h-4 text-[#59A5B2]" />
+                      </div>
+                    </div>
+
+                    {/* Col 3: Price */}
+                    <div className="col-span-1 md:col-span-3 flex flex-col items-start md:items-center justify-center">
+                      <span className="text-2xl font-bold text-[#59A5B2]" style={{ fontFamily: "Poppins, sans-serif" }}>
+                        $390
+                      </span>
+                      <span className="text-xs text-gray-500" style={{ fontFamily: "Inter, sans-serif" }}>
+                        Includes taxes and charges
+                      </span>
+                    </div>
+
+                    {/* Col 4: Select Rooms */}
+                    <div className="col-span-1 md:col-span-3 flex items-center justify-start md:justify-center gap-3 flex-wrap">
+                      {/* Quantity Selector */}
+                      <div className="flex items-center border border-gray-300 rounded">
+                        <button
+                          className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => setQuadRoomQty(Math.max(0, quadRoomQty - 1))}
+                          disabled={quadRoomQty <= 0}
+                          data-testid="button-quad-room-decrease"
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="px-4 py-2 text-sm font-medium border-x border-gray-300 min-w-[40px] text-center" style={{ fontFamily: "Inter, sans-serif" }}>
+                          {String(quadRoomQty).padStart(2, "0")}
+                        </span>
+                        <button
+                          className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
+                          onClick={() => setQuadRoomQty(quadRoomQty + 1)}
+                          data-testid="button-quad-room-increase"
+                          aria-label="Increase quantity"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Add Button */}
+                      <Button
+                        variant="outline"
+                        className="border-[#59A5B2] text-[#59A5B2] hover:bg-[#59A5B2] hover:text-white px-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={quadRoomQty === 0}
+                        onClick={() => addToCart("Quad Room", quadRoomQty, 390)}
+                        data-testid="button-add-quad-room"
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Room Row 2 - King Room */}
+                <div className="p-4 md:p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                    {/* Col 1: Room Images */}
+                    <div className="col-span-1 md:col-span-3">
+                      <p className="text-xs text-gray-500 mb-2 md:hidden" style={{ fontFamily: "Inter, sans-serif" }}>
+                        Room Name
+                      </p>
+                      <div className="flex gap-2">
+                        <div className="w-20 h-16 bg-gray-200 rounded-lg flex-shrink-0" />
+                        <div className="w-20 h-16 bg-gray-200 rounded-lg flex-shrink-0" />
+                      </div>
+                    </div>
+
+                    {/* Col 2: Room Type + Guest Icons */}
+                    <div className="col-span-1 md:col-span-3">
+                      <h3 className="font-semibold text-[#59A5B2] text-lg mb-2" style={{ fontFamily: "Poppins, sans-serif" }}>
+                        King Room
+                      </h3>
+                      <div className="flex items-center gap-1">
+                        <FontAwesomeIcon icon={faUserGroup} className="w-4 h-4 text-[#59A5B2]" />
+                        <FontAwesomeIcon icon={faUserGroup} className="w-4 h-4 text-[#59A5B2]" />
+                      </div>
+                    </div>
+
+                    {/* Col 3: Price */}
+                    <div className="col-span-1 md:col-span-3 flex flex-col items-start md:items-center justify-center">
+                      <span className="text-3xl font-bold text-[#59A5B2]" style={{ fontFamily: "Poppins, sans-serif" }}>
+                        $250
+                      </span>
+                      <span className="text-xs text-gray-500" style={{ fontFamily: "Inter, sans-serif" }}>
+                        Includes taxes and charges
+                      </span>
+                    </div>
+
+                    {/* Col 4: Select Rooms */}
+                    <div className="col-span-1 md:col-span-3 flex items-center justify-start md:justify-center gap-3 flex-wrap">
+                      {/* Quantity Selector */}
+                      <div className="flex items-center border border-gray-300 rounded">
+                        <button
+                          className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => setKingRoomQty(Math.max(0, kingRoomQty - 1))}
+                          disabled={kingRoomQty <= 0}
+                          data-testid="button-king-room-decrease"
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="px-4 py-2 text-sm font-medium border-x border-gray-300 min-w-[40px] text-center" style={{ fontFamily: "Inter, sans-serif" }}>
+                          {String(kingRoomQty).padStart(2, "0")}
+                        </span>
+                        <button
+                          className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
+                          onClick={() => setKingRoomQty(kingRoomQty + 1)}
+                          data-testid="button-king-room-increase"
+                          aria-label="Increase quantity"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Add Button */}
+                      <Button
+                        variant="outline"
+                        className="border-[#59A5B2] text-[#59A5B2] hover:bg-[#59A5B2] hover:text-white px-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={kingRoomQty === 0}
+                        onClick={() => addToCart("King Room", kingRoomQty, 250)}
+                        data-testid="button-add-king-room"
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
 
-          {/* Right Column - Booking Sidebar */}
+          {/* ============================================ */}
+          {/* RIGHT SIDEBAR - BOOKING SUMMARY */}
+          {/* ============================================ */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg border border-gray-200 p-6 sticky top-4">
-              {/* Rating */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-               
-                </div>
-                <div className="bg-[#59A5B2] text-white px-3 py-2 rounded-md font-bold text-lg" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                  {hotel.rating}
-                </div>
-              </div>
-              
-              <p className="text-sm text-gray-600 mb-6" style={{ fontFamily: 'Inter, sans-serif' }}>
-                {hotel.reviewCount} reviews
-              </p>
-              
-                    {/* Check-in / Check-out */}
-            <div className="mb-6">
-              <div className="border border-gray-300 px-4 py-4 rounded-lg">
-                <p className="text-sm font-semibold text-[#FEC328] mb-1" style={{ fontFamily: "Poppins, sans-serif" }}>
+            <Card className="sticky top-4 p-6">
+              {/* Check in - Check out */}
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-gray-800 mb-2" style={{ fontFamily: "Poppins, sans-serif" }}>
                   Check in - Check out
-                </p>
-                <p className="text-sm font-medium text-[#2D1B69]" style={{ fontFamily: "Inter, sans-serif" }}>
-                  {hotel.checkInDate} - {hotel.checkOutDate}
-                </p>
+                </h3>
+                <div className="flex items-center gap-2 text-sm text-gray-600" style={{ fontFamily: "Inter, sans-serif" }}>
+                  <CalendarIcon className="w-4 h-4 text-[#59A5B2]" />
+                  <span>
+                    {checkInDate && checkOutDate
+                      ? `${format(checkInDate, "MMM dd yyyy")} - ${format(checkOutDate, "MMM dd yyyy")}`
+                      : "Select dates"}
+                  </span>
+                </div>
+                {showValidation && (!checkInDate || !checkOutDate) && (
+                  <span className="text-red-500 text-xs mt-1 block">Please select dates</span>
+                )}
               </div>
-            </div>
 
-            {/* Guest Selection */}
-            <div className="mb-8">
-              <div className="border border-gray-300 px-4 py-4 rounded-lg">
-                <label
-                  className="block text-sm font-semibold text-[#FEC328] mb-1"
-                  style={{ fontFamily: "Poppins, sans-serif" }}
-                >
+              {/* Guest */}
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-gray-800 mb-2" style={{ fontFamily: "Poppins, sans-serif" }}>
                   Guest
-                </label>
-                <p className="text-sm font-medium text-[#2D1B69]" style={{ fontFamily: "Inter, sans-serif" }}>
-                  {guests}
-                </p>
+                </h3>
+                <div className="flex items-center gap-2 text-sm text-gray-600" style={{ fontFamily: "Inter, sans-serif" }}>
+                  <Users className="w-4 h-4 text-[#59A5B2]" />
+                  <span>{`${adults} adults · ${children} children · ${cart.reduce((sum, item) => sum + item.quantity, 0) || 1} room`}</span>
+                </div>
               </div>
-            </div>
-              
+
+              {/* Booking Date / Selected Rooms */}
+              <div className="mb-6 pb-6 border-b border-gray-200">
+                <h3 className="text-sm font-semibold text-gray-800 mb-3" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  Booking Details
+                </h3>
+
+                {cart.length === 0 ? (
+                  <p className="text-sm text-gray-500" style={{ fontFamily: "Inter, sans-serif" }}>
+                    No rooms selected
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {cart.map((item, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-sm" style={{ fontFamily: "Inter, sans-serif" }}>
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-700">
+                            {item.quantity} {item.roomType}
+                          </span>
+                          <button
+                            onClick={() => removeFromCart(item.roomType)}
+                            className="text-red-500 hover:text-red-700"
+                            data-testid={`button-remove-${item.roomType.toLowerCase().replace(" ", "-")}`}
+                            aria-label={`Remove ${item.roomType}`}
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <span className="text-gray-800 font-medium">
+                          ${item.quantity * item.pricePerNight}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {showValidation && cart.length === 0 && (
+                  <span className="text-red-500 text-xs mt-2 block">Please add at least one room</span>
+                )}
+              </div>
+
+              {/* Total */}
+              <div className="flex justify-between items-center mb-6">
+                <span className="text-lg font-bold text-gray-800" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  Total
+                </span>
+                <span className="text-2xl font-bold text-[#59A5B2]" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  ${calculateTotal()}
+                </span>
+              </div>
+
               {/* Reserve Button */}
-              <button
-                className="w-full py-4 bg-[#FEC328] hover:bg-[#e5af1f] text-[#000000] font-bold text-lg rounded-md transition-all duration-300 transform hover:scale-105"
-                style={{ fontFamily: 'Poppins, sans-serif' }}
-                data-testid="button-reserve-sidebar"
+              <Button
+                className="w-full bg-[#59A5B2] hover:bg-[#4a8f9a] text-white font-semibold py-3"
+                onClick={handleReserve}
+                data-testid="button-reserve"
               >
                 Reserve
-              </button>
-            </div>
+              </Button>
+            </Card>
           </div>
         </div>
       </div>
 
-      
-    </>
+    </div>
   );
 }

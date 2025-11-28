@@ -333,7 +333,7 @@ export default function OwnerBarrierForm() {
       })
 
       if (response.status === 200 || response.status === 201) {
-        router.push("/owner/verification-success")
+        router.push("/owner/verification/verification-success")
       }
     } catch (error) {
       console.error("Verification error:", error)
