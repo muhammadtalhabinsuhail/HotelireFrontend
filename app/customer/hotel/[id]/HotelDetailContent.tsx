@@ -54,6 +54,7 @@ import {
   faHotel,
   faSearch,
   faUserGroup,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 
 // Canadian cities for location autocomplete
@@ -103,18 +104,6 @@ export default function HotelDetailPage({id}: {id: string}) {
   const [showValidation, setShowValidation] = useState(false);
 
 
-  useEffect(() => {
-   if(!id || id === "") {
-
-    router.push("/not-found/gtgtgt");  
-
-   }
-
-  //  if(--> not exsits)
-
-  }, [])
-  
-
   const filteredCities = location
     ? canadianCities.filter((city) =>
         city.toLowerCase().includes(location.toLowerCase())
@@ -135,23 +124,30 @@ export default function HotelDetailPage({id}: {id: string}) {
 
 
   // Add room to cart
-  const addToCart = (roomType: string, quantity: number, pricePerNight: number) => {
-    if (quantity === 0) return;
+ const addToCart = (roomType: string, quantity: number, pricePerNight: number) => {
+  if (quantity === 0) return;
 
-    setCart((prev) => {
-      const existingIndex = prev.findIndex((item) => item.roomType === roomType);
-      if (existingIndex >= 0) {
-        const updated = [...prev];
-        updated[existingIndex].quantity += quantity;
-        return updated;
-      }
-      return [...prev, { roomType, quantity, pricePerNight }];
-    });
+  setCart(prev => {
+    const existingIndex = prev.findIndex(item => item.roomType === roomType);
+    let updated = [...prev];
 
-    // Reset the selector after adding
+    if (existingIndex >= 0) {
+      updated[existingIndex] = {
+        ...updated[existingIndex],
+        quantity: updated[existingIndex].quantity + quantity,
+      };
+    } else {
+      updated.push({ roomType, quantity, pricePerNight });
+    }
+
+    // Reset HERE (AFTER cart updates)
     if (roomType === "Quad Room") setQuadRoomQty(0);
     if (roomType === "King Room") setKingRoomQty(0);
-  };
+
+    return updated;
+  });
+};
+
 
   // Remove room from cart
   const removeFromCart = (roomType: string) => {
@@ -784,7 +780,7 @@ export default function HotelDetailPage({id}: {id: string}) {
                             data-testid={`button-remove-${item.roomType.toLowerCase().replace(" ", "-")}`}
                             aria-label={`Remove ${item.roomType}`}
                           >
-                            <X className="w-4 h-4" />
+                          <FontAwesomeIcon icon={faTrash} className="w-4 h-4 text-red-500 hover:text-red-700" />
                           </button>
                         </div>
                         <span className="text-gray-800 font-medium">
